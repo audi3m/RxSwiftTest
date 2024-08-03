@@ -52,11 +52,14 @@ final class SignInViewController: BaseViewController {
         let button = UIButton()
         button.setTitle("가입하기", for: .normal)
         button.backgroundColor = .lightGray
+        button.layer.cornerRadius = 10
         return button
     }()
     
     let disposeBag = DisposeBag()
-    
+    let phoneNumber = BehaviorSubject(value: "010")
+    let birthday = BehaviorSubject(value: Date())
+    let allValid = BehaviorSubject(value: false)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -73,16 +76,45 @@ extension SignInViewController {
         let passwordValid = passwordField.rx.text.orEmpty
             .map { $0.count >= 8 }
         
-        let phoneValid = phoneField.rx.text.orEmpty
-            .map { Int($0) != nil && $0.count >= 10 }
-//        birthDayPicker.rx.date
-//            .bind(with: self) { owner, date in
-//                let component = Calendar.current.dateComponents([.year, .month, .day], from: date)
-//                owner.year.accept(component.year!)
-//                owner.month.accept(component.month!)
-//                owner.day.accept(component.day!)
-//            }
-//            .disposed(by: disposeBag)
+        let phoneCountValid = phoneField.rx.text.orEmpty
+            .map { $0.count >= 10 }
+        
+        let birthdayValid = birthDayPicker.rx.date
+            .map { self.is17Years(date: $0) }
+        
+        phoneNumber
+            .bind(to: phoneField.rx.text)
+            .disposed(by: disposeBag)
+        
+        birthday
+            .bind(to: birthDayPicker.rx.date)
+            .disposed(by: disposeBag)
+        
+        birthDayPicker.rx.date
+            .bind(with: self) { owner, date in
+                owner.birthInfoLabel.text = owner.formatDate(date: date)
+            }
+            .disposed(by: disposeBag)
+        
+        passwordValid
+            .bind(with: self) { owner, value in
+                owner.passwordValidLabel.text = value ? "유효한 비밀번호입니다" : "8자리 이상 입력하세요"
+                owner.passwordValidLabel.textColor = value ? .systemBlue : .systemRed
+            }
+            .disposed(by: disposeBag)
+        
+        phoneCountValid
+            .bind(with: self) { owner, value in
+                owner.phoneValidLabel.text = value ? "유효한 전화번호입니다" : "10자리 이상 입력하세요"
+                owner.phoneValidLabel.textColor = value ? .systemBlue : .systemRed
+            }
+            .disposed(by: disposeBag)
+        
+        birthdayValid
+            .bind(with: self) { owner, value in
+                owner.birthInfoLabel.text = value ? "가능한 생일입니다." : "만 17세 이상만 가능합니다"
+            }
+            .disposed(by: disposeBag)
         
         signInButton.rx.tap
             .bind(with: self) { owner, _ in
@@ -91,6 +123,25 @@ extension SignInViewController {
             .disposed(by: disposeBag)
     }
     
+}
+
+extension SignInViewController {
+    func is17Years(date: Date) -> Bool {
+        let calendar = Calendar.current
+        let birthdayComponent = calendar.dateComponents([.year], from: date, to: Date())
+        if let age = birthdayComponent.year {
+            return age >= 17
+        }
+        return false
+    }
+    
+    func formatDate(date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "yyyy년 M월 d일"
+        return formatter.string(from: date)
+    }
+
 }
 
 // View

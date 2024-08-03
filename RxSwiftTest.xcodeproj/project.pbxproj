@@ -65,7 +65,7 @@
 				D48233FA2C5BC65C00BD02E4 /* AppDelegate.swift */,
 				D48233FC2C5BC65C00BD02E4 /* SceneDelegate.swift */,
 				D482341B2C5CA2C500BD02E4 /* ViewControllers */,
-				D482341A2C5C6CB800BD02E4 /* New Group */,
+				D482341A2C5C6CB800BD02E4 /* CustomViews */,
 				D48234032C5BC65D00BD02E4 /* Assets.xcassets */,
 				D48234052C5BC65D00BD02E4 /* LaunchScreen.storyboard */,
 				D48234082C5BC65D00BD02E4 /* Info.plist */,
@@ -73,12 +73,12 @@
 			path = RxSwiftTest;
 			sourceTree = "<group>";
 		};
-		D482341A2C5C6CB800BD02E4 /* New Group */ = {
+		D482341A2C5C6CB800BD02E4 /* CustomViews */ = {
 			isa = PBXGroup;
 			children = (
 				D48234182C5C6C6600BD02E4 /* BaseViewController.swift */,
 			);
-			path = "New Group";
+			path = CustomViews;
 			sourceTree = "<group>";
 		};
 		D482341B2C5CA2C500BD02E4 /* ViewControllers */ = {
