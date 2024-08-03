@@ -12,35 +12,35 @@ import RxCocoa
 
 final class SignInViewController: BaseViewController {
     
-    let passwordField: UITextField = {
+    private let passwordField: UITextField = {
         let field = UITextField()
         field.placeholder = "비밀번호를 입력하세요"
         field.borderStyle = .roundedRect
         return field
     }()
-    let passwordValidLabel: UILabel = {
+    private let passwordValidLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 13)
         return label
     }()
-    let phoneField: UITextField = {
+    private let phoneField: UITextField = {
         let field = UITextField()
         field.placeholder = "전화번호를 입력하세요"
         field.borderStyle = .roundedRect
         field.keyboardType = .numberPad
         return field
     }()
-    let phoneValidLabel: UILabel = {
+    private let phoneValidLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 13)
         return label
     }()
-    let birthInfoLabel: UILabel = {
+    private let birthInfoLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 15)
         return label
     }()
-    let birthDayPicker: UIDatePicker = {
+    private let birthDayPicker: UIDatePicker = {
         let picker = UIDatePicker()
         picker.datePickerMode = .date
         picker.preferredDatePickerStyle = .wheels
@@ -48,7 +48,7 @@ final class SignInViewController: BaseViewController {
         picker.maximumDate = Date()
         return picker
     }()
-    let signInButton: UIButton = {
+    private let signInButton: UIButton = {
         let button = UIButton()
         button.setTitle("가입하기", for: .normal)
         button.backgroundColor = .lightGray
@@ -56,10 +56,11 @@ final class SignInViewController: BaseViewController {
         return button
     }()
     
-    let disposeBag = DisposeBag()
-    let phoneNumber = BehaviorSubject(value: "010")
-    let birthday = BehaviorSubject(value: Date())
-    let allValid = BehaviorSubject(value: false)
+    private let disposeBag = DisposeBag()
+    private let phoneNumber = BehaviorSubject(value: "010")
+    private let birthday = BehaviorSubject(value: Date())
+    
+    private var showDate = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -82,6 +83,8 @@ extension SignInViewController {
         let birthdayValid = birthDayPicker.rx.date
             .map { self.is17Years(date: $0) }
         
+        let allValid = Observable.combineLatest(passwordValid, phoneCountValid, birthdayValid) { $0 && $1 && $2 }
+        
         phoneNumber
             .bind(to: phoneField.rx.text)
             .disposed(by: disposeBag)
@@ -93,6 +96,16 @@ extension SignInViewController {
         birthDayPicker.rx.date
             .bind(with: self) { owner, date in
                 owner.birthInfoLabel.text = owner.formatDate(date: date)
+            }
+            .disposed(by: disposeBag)
+        
+        allValid
+            .bind(to: signInButton.rx.isEnabled)
+            .disposed(by: disposeBag)
+        
+        allValid
+            .bind(with: self) { owner, value in
+                owner.signInButton.backgroundColor = value ? .systemBlue : .lightGray
             }
             .disposed(by: disposeBag)
         
@@ -112,9 +125,11 @@ extension SignInViewController {
         
         birthdayValid
             .bind(with: self) { owner, value in
-                owner.birthInfoLabel.text = value ? "가능한 생일입니다." : "만 17세 이상만 가능합니다"
+                owner.birthInfoLabel.text = value ? "가입 가능한 나이입니다" : "만 17세 이상만 가입 가능합니다"
+                owner.birthInfoLabel.textColor = value ? .systemBlue : .systemRed
             }
             .disposed(by: disposeBag)
+        
         
         signInButton.rx.tap
             .bind(with: self) { owner, _ in
@@ -126,7 +141,7 @@ extension SignInViewController {
 }
 
 extension SignInViewController {
-    func is17Years(date: Date) -> Bool {
+    private func is17Years(date: Date) -> Bool {
         let calendar = Calendar.current
         let birthdayComponent = calendar.dateComponents([.year], from: date, to: Date())
         if let age = birthdayComponent.year {
@@ -135,7 +150,7 @@ extension SignInViewController {
         return false
     }
     
-    func formatDate(date: Date) -> String {
+    private func formatDate(date: Date) -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.dateFormat = "yyyy년 M월 d일"
